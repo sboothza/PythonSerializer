@@ -8,7 +8,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sb_serializer"
 readme = "README.md"
-version = "0.0.2"
+urls = { "homepage" = "https://github.com/sboothza/serializer" }
+version = "0.0.3"
 authors = [
     { name = "Stephen Booth", email = "stephen.booth.za@gmail.com" },
 ]

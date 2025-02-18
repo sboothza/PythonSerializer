@@ -64,6 +64,9 @@ class HardSerializer(json.JSONEncoder):
         return obj
 
     def map_to_object(self, source_obj, cls):
+        if source_obj is None or source_obj == "":
+            return None
+
         if type(source_obj) is list:
             new_list = []
             element_cls = get_args(cls)

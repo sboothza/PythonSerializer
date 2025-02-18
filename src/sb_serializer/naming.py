@@ -40,17 +40,24 @@ class Name(object):
     def map_to_dict(self, serializer):
         return self.name
 
-    def map_to_object(self, obj, serializer):
-        self.name = obj
+    def map_to_object(self, obj, serializer, naming):
+        name = naming.from_string(obj)
+        self.name = name.name
+        self.words = name.words
+
 
 
 class Naming(object):
+    @staticmethod
+    def sort_func(e):
+        return len(e[0])
+
     def __init__(self, dictionary: str, big_dictionary: str):
         dictionary = get_fullname(dictionary)
         big_dictionary = get_fullname(big_dictionary)
 
         # normal words
-        with open(dictionary, 'r') as dictionary_file:
+        with open(dictionary, 'r', encoding="utf-8") as dictionary_file:
             lines = dictionary_file.readlines()
 
         self.dictionary: List[str] = list()
@@ -60,7 +67,7 @@ class Naming(object):
         self.dictionary.sort(key=len, reverse=True)
 
         # big words
-        with open(big_dictionary, 'r') as big_dictionary_file:
+        with open(big_dictionary, 'r', encoding="utf-8") as big_dictionary_file:
             lines = big_dictionary_file.readlines()
 
         self.big_dictionary: List[List[str]] = []
@@ -71,7 +78,36 @@ class Naming(object):
             words = [line.replace(",", "")] + words
             self.big_dictionary.append(words)
 
+        self.big_dictionary.sort(key=Naming.sort_func, reverse=True)
+
     def string_to_name(self, name: str) -> Name:
+        value = name.strip().lower().replace("_", "").replace("-", "")
+        found: list[str] = [""] * len(value)
+
+        # big words
+        pos, words = find_first_in_array(value, self.big_dictionary)
+        while pos > -1:
+            for i in range(len(words)):
+                found[pos + i] = words[i]
+                value = value.replace(words[i], " " * len(words[i]))
+
+            pos, words = find_first_in_array(value, self.big_dictionary)
+
+        # normal words
+        while len(value.strip()) > 0:
+            pos, word = find_first_in(value, self.dictionary)
+            if pos > -1:
+                found[pos] = word
+                value = value.replace(word, " " * len(word))
+            else:
+                raise Exception(f"Not found {value}")
+
+        result = Name(name)
+        result.words = [w for w in found if w != ""]
+
+        return result
+
+    def from_string(self, name: str) -> Name:
         value = name.strip().lower().replace("_", "").replace("-", "")
         found: list[str] = [""] * len(value)
 
